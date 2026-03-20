@@ -1,0 +1,215 @@
+-- Criação do banco
+CREATE DATABASE GestaoPatrimonios;
+GO
+
+-- Acesso ao banco
+USE GestaoPatrimonios;
+GO
+
+-- Criação de tabelas
+-- Tabelas sem ligações
+CREATE TABLE Area (
+	AreaID						UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	NomeArea					VARCHAR(50) UNIQUE NOT NULL
+);
+GO
+
+CREATE TABLE TipoPatrimonio (
+	TipoPatrimonioID			UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	NomeTipo					VARCHAR(100) UNIQUE NOT NULL
+);
+GO
+
+-- inativo, ativo e transferido
+CREATE TABLE StatusPatrimonio (
+	StatusPatrimonioID			UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	[Status]					VARCHAR(50) UNIQUE NOT NULL
+);
+GO
+
+-- modificação e transferência
+CREATE TABLE TipoAlteracao (
+	AlteracaoID					UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	Tipo						VARCHAR(50) UNIQUE NOT NULL
+);
+GO
+
+-- Pendente de aprovação, aprovado e recusado
+CREATE TABLE StatusTransferencia (
+	StatusTransferenciaID		UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	[Status]					VARCHAR(50) UNIQUE NOT NULL
+);
+GO
+
+CREATE TABLE Cargo (
+	CargoID						UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	NomeCargo					VARCHAR(50) UNIQUE NOT NULL
+);
+GO
+
+-- coordenador ou responsável
+CREATE TABLE TipoUsuario (
+	TipoUsuarioID				UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	NomeTipo					VARCHAR(50) UNIQUE NOT NULL
+);
+GO
+
+CREATE TABLE Cidade (
+	CidadeID					UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	NomeCidade					VARCHAR(50) NOT NULL,
+	Estado						VARCHAR(50) NOT NULL
+);
+GO
+
+-- Tabelas com ligações
+CREATE TABLE [Local] (
+	LocalID						UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	Nome						VARCHAR(100) UNIQUE NOT NULL,
+	LocalSAP					INT,
+	DescricaoSAP				VARCHAR(100),
+	AreaID						UNIQUEIDENTIFIER NOT NULL,
+
+    CONSTRAINT FK_Local_Area FOREIGN KEY(AreaID) 
+	REFERENCES Area(AreaID) ON DELETE CASCADE
+);
+GO
+
+CREATE TABLE Patrimonio (
+	PatrimonioID				UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	Denominacao					VARCHAR(MAX) NOT NULL,
+	NumeroSerie					VARCHAR(30) UNIQUE NOT NULL,
+	Valor						DECIMAL(10, 2) NOT NULL,
+	Imagem						VARCHAR(MAX) NOT NULL,
+	LocalID						UNIQUEIDENTIFIER NOT NULL,
+	TipoPatrimonioID			UNIQUEIDENTIFIER NOT NULL,
+	StatusPatrimonioID			UNIQUEIDENTIFIER NOT NULL
+
+    CONSTRAINT FK_Patrimonio_Local FOREIGN KEY(LocalID) 
+	REFERENCES [Local](LocalID) ON DELETE CASCADE,
+
+	CONSTRAINT FK_Patrimonio_TipoPatrimonio FOREIGN KEY(TipoPatrimonioID) 
+	REFERENCES TipoPatrimonio(TipoPatrimonioID) ON DELETE CASCADE,
+
+	CONSTRAINT FK_Patrimonio_StatusPatrimonio FOREIGN KEY(StatusPatrimonioID) 
+	REFERENCES StatusPatrimonio(StatusPatrimonioID) ON DELETE CASCADE
+);
+GO
+
+CREATE TABLE Bairro (
+	BairroID					UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	NomeBairro					VARCHAR(50) NOT NULL,
+	CidadeID					UNIQUEIDENTIFIER NOT NULL,
+
+	CONSTRAINT FK_Bairro_Cidade FOREIGN KEY(CidadeID) 
+	REFERENCES Cidade(CidadeID) ON DELETE CASCADE
+);
+GO
+
+CREATE TABLE Endereco (
+	EnderecoID					UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	Logradouro					VARCHAR(50) NOT NULL,
+	Numero						INT,
+	Complemento					VARCHAR(20),
+	CEP							VARCHAR(10),
+	BairroID					UNIQUEIDENTIFIER NOT NULL,
+
+	CONSTRAINT FK_Endereco_Bairro FOREIGN KEY(BairroID) 
+	REFERENCES Bairro(BairroID) ON DELETE CASCADE
+);
+GO
+
+CREATE TABLE Usuario (
+	UsuarioID					UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	NIF							VARCHAR(7) UNIQUE,
+	Nome						VARCHAR(150) UNIQUE NOT NULL,
+	RG							VARCHAR(15) UNIQUE NOT NULL,
+	CPF							VARCHAR(11) UNIQUE NOT NULL,
+	CarteiraTrabalho			VARCHAR(14) UNIQUE NOT NULL,
+	Email						VARCHAR(150) UNIQUE NOT NULL,
+	Senha						VARBINARY(32),
+	EnderecoID					UNIQUEIDENTIFIER NOT NULL,
+	CargoID						UNIQUEIDENTIFIER NOT NULL,
+	TipoUsuarioID				UNIQUEIDENTIFIER NOT NULL,
+
+    CONSTRAINT FK_Usuario_Endereco FOREIGN KEY(EnderecoID) 
+	REFERENCES Endereco(EnderecoID) ON DELETE CASCADE,
+
+	CONSTRAINT FK_Usuario_Cargo FOREIGN KEY(CargoID) 
+	REFERENCES Cargo(CargoID) ON DELETE CASCADE,
+
+	CONSTRAINT FK_Usuario_TipoUsuario FOREIGN KEY(TipoUsuarioID) 
+	REFERENCES TipoUsuario(TipoUsuarioID) ON DELETE CASCADE
+);
+GO
+
+CREATE TABLE SolicitacaoTransferencia (
+	TransferenciaID				UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	DataCriacaoSolicitacao		DATETIME NOT NULL,
+	DataResposta				DATETIME NOT NULL,
+	Justificativa				VARCHAR(MAX) NOT NULL,
+	StatusTransferenciaID		UNIQUEIDENTIFIER NOT NULL,
+	UsuarioIDSolicitacao		UNIQUEIDENTIFIER NOT NULL,
+	UsuarioIDAprovacao			UNIQUEIDENTIFIER NOT NULL,
+	PatrimonioID				UNIQUEIDENTIFIER NOT NULL,
+	LocalID						UNIQUEIDENTIFIER NOT NULL
+
+    CONSTRAINT FK_SolicitacaoTransferencia_StatusTransferencia FOREIGN KEY(StatusTransferenciaID) 
+	REFERENCES StatusTransferencia(StatusTransferenciaID) ON DELETE CASCADE,
+
+	CONSTRAINT FK_SolicitacaoTransferencia_UsuarioSolicitacao FOREIGN KEY(UsuarioIDSolicitacao) 
+	REFERENCES Usuario(UsuarioID) ON DELETE CASCADE,
+
+	CONSTRAINT FK_SolicitacaoTransferencia_UsuarioAprovacao FOREIGN KEY(UsuarioIDAprovacao) 
+	REFERENCES Usuario(UsuarioID) ON DELETE CASCADE,
+
+	CONSTRAINT FK_SolicitacaoTransferencia_Patrimonio FOREIGN KEY(PatrimonioID) 
+	REFERENCES Patrimonio(PatrimonioID) ON DELETE CASCADE,
+
+	CONSTRAINT FK_SolicitacaoTransferencia_Local FOREIGN KEY(LocalID) 
+	REFERENCES [Local](LocalID) ON DELETE CASCADE
+);
+GO
+
+CREATE TABLE LogPatrimonio (
+	LogPatrimonioID				UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+	DataTransferencia			DATETIME NOT NULL,
+	AlteracaoID					UNIQUEIDENTIFIER NOT NULL,
+	StatusPatrimonioID			UNIQUEIDENTIFIER NOT NULL,
+	PatrimonioID				UNIQUEIDENTIFIER NOT NULL,
+	UsuarioID					UNIQUEIDENTIFIER NOT NULL,
+	LocalID						UNIQUEIDENTIFIER NOT NULL
+
+    CONSTRAINT FK_LogPatrimonio_Alteracao FOREIGN KEY(AlteracaoID) 
+	REFERENCES TipoAlteracao(AlteracaoID) ON DELETE CASCADE,
+
+	CONSTRAINT FK_LogPatrimonio_StatusPatrimonio FOREIGN KEY(StatusPatrimonioID) 
+	REFERENCES StatusPatrimonio(StatusPatrimonioID) ON DELETE CASCADE,
+
+	CONSTRAINT FK_LogPatrimonio_Patrimonio FOREIGN KEY(PatrimonioID) 
+	REFERENCES Patrimonio(PatrimonioID) ON DELETE CASCADE,
+
+	CONSTRAINT FK_LogPatrimonio_Usuario FOREIGN KEY(UsuarioID) 
+	REFERENCES Usuario(UsuarioID) ON DELETE CASCADE,
+
+	CONSTRAINT FK_LogPatrimonio_Local FOREIGN KEY(LocalID) 
+	REFERENCES [Local](LocalID) ON DELETE CASCADE
+);
+GO
+
+-- Tabela intermediária
+CREATE TABLE LocalUsario (
+	UsuarioID			UNIQUEIDENTIFIER NOT NULL,
+	LocalID				UNIQUEIDENTIFIER NOT NULL,
+
+	CONSTRAINT PK_LocalUsuario
+	PRIMARY KEY (UsuarioID, LocalID),
+
+	CONSTRAINT FK_LocalUsuario_Usuario
+	FOREIGN KEY (UsuarioID)
+	REFERENCES Usuario(UsuarioID) ON DELETE CASCADE,
+
+	CONSTRAINT FK_LocalUsuario_Local
+	FOREIGN KEY (LocalID)
+	REFERENCES [Local](LocalID) ON DELETE CASCADE
+);
+GO
