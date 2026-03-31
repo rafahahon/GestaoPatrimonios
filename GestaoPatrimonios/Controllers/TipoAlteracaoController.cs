@@ -1,34 +1,36 @@
 ﻿using GestaoPatrimonios.Applications.Services;
+using GestaoPatrimonios.DTOs.TipoAlteracao;
 using GestaoPatrimonios.DTOs.TipoUsuarioDto;
 using GestaoPatrimonios.Exceptions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GestaoPatrimonios.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TipoUsuarioController : ControllerBase
+    public class TipoAlteracaoController : ControllerBase
     {
-        private readonly TipoUsuarioService _service;
+        private readonly TipoAlteracaoService _service;
 
-        public TipoUsuarioController(TipoUsuarioService service)
+        public TipoAlteracaoController(TipoAlteracaoService service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public ActionResult<List<ListarTipoUsuarioDto>> Listar()
+        public ActionResult<List<ListarTipoAlteracaoDto>> Listar()
         {
-            List<ListarTipoUsuarioDto> tipos = _service.Listar();
+            List<ListarTipoAlteracaoDto> tipos = _service.Listar();
             return Ok(tipos);
         }
 
         [HttpGet("{id}")]
-        public ActionResult<ListarTipoUsuarioDto> BuscarPorId(Guid id)
+        public ActionResult<ListarTipoAlteracaoDto> BuscarPorId(Guid id)
         {
             try
             {
-                ListarTipoUsuarioDto tipo = _service.BuscarPorId(id);
+                ListarTipoAlteracaoDto tipo = _service.BuscarPorId(id);
                 return Ok(tipo);
             }
             catch (DomainException ex)
@@ -38,7 +40,7 @@ namespace GestaoPatrimonios.Controllers
         }
 
         [HttpPost]
-        public ActionResult Adicionar(CriarTipoUsuarioDto dto)
+        public ActionResult Adicionar(CriarTipoAlteracaoDto dto)
         {
             try
             {
@@ -52,7 +54,7 @@ namespace GestaoPatrimonios.Controllers
         }
 
         [HttpPut("{id}")]
-        public ActionResult Atualizar(Guid id, CriarTipoUsuarioDto dto)
+        public ActionResult Atualizar(Guid id, CriarTipoAlteracaoDto dto)
         {
             try
             {

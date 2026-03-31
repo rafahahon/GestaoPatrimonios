@@ -321,3 +321,7 @@ GO
 INSERT INTO Bairro(NomeBairro, CidadeID) VALUES
 ('Centro', (SELECT CidadeID FROM Cidade WHERE NomeCidade = 'São Caetano do Sul'));
 GO
+
+-- Adicionando Primeiro Acesso na tabela Usuário
+ALTER TABLE Usuario
+ADD PrimeiroAcesso BIT NOT NULL DEFAULT 1;

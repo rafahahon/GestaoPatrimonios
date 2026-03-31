@@ -1,5 +1,5 @@
 ﻿using GestaoPatrimonios.Applications.Services;
-using GestaoPatrimonios.DTOs.TipoUsuarioDto;
+using GestaoPatrimonios.DTOs.TipoPatrimonioDto;
 using GestaoPatrimonios.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,28 +7,28 @@ namespace GestaoPatrimonios.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TipoUsuarioController : ControllerBase
+    public class TipoPatrimonioController : ControllerBase
     {
-        private readonly TipoUsuarioService _service;
+        private readonly TipoPatrimonioService _service;
 
-        public TipoUsuarioController(TipoUsuarioService service)
+        public TipoPatrimonioController(TipoPatrimonioService service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public ActionResult<List<ListarTipoUsuarioDto>> Listar()
+        public ActionResult<List<ListarTipoPatrimonioDto>> Listar()
         {
-            List<ListarTipoUsuarioDto> tipos = _service.Listar();
+            List<ListarTipoPatrimonioDto> tipos = _service.Listar();
             return Ok(tipos);
         }
 
         [HttpGet("{id}")]
-        public ActionResult<ListarTipoUsuarioDto> BuscarPorId(Guid id)
+        public ActionResult<ListarTipoPatrimonioDto> BuscarPorId(Guid id)
         {
             try
             {
-                ListarTipoUsuarioDto tipo = _service.BuscarPorId(id);
+                ListarTipoPatrimonioDto tipo = _service.BuscarPorId(id);
                 return Ok(tipo);
             }
             catch (DomainException ex)
@@ -38,7 +38,7 @@ namespace GestaoPatrimonios.Controllers
         }
 
         [HttpPost]
-        public ActionResult Adicionar(CriarTipoUsuarioDto dto)
+        public ActionResult Adicionar(CriarTipoPatrimonioDto dto)
         {
             try
             {
@@ -52,7 +52,7 @@ namespace GestaoPatrimonios.Controllers
         }
 
         [HttpPut("{id}")]
-        public ActionResult Atualizar(Guid id, CriarTipoUsuarioDto dto)
+        public ActionResult Atualizar(Guid id, CriarTipoPatrimonioDto dto)
         {
             try
             {
