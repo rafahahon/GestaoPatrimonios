@@ -27,37 +27,49 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IAreaRepository, AreaRepository>();
 builder.Services.AddScoped<AreaService>();
 
-// Localização 
-builder.Services.AddScoped<ILocalizacaoRepository, LocalizacaoRepository>();
-builder.Services.AddScoped<LocalizacaoService>();
-
-// Usuário 
-builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
-builder.Services.AddScoped<UsuarioService>();
-
 // Bairro 
 builder.Services.AddScoped<IBairroRepository, BairroRepository>();
 builder.Services.AddScoped<BairroService>();
-
-// Cidade 
-builder.Services.AddScoped<ICidadeRepository, CidadeRepository>();
-builder.Services.AddScoped<CidadeService>();
 
 // Cargo 
 builder.Services.AddScoped<ICargoRepository, CargoRepository>();
 builder.Services.AddScoped<CargoService>();
 
-// Tipo usuário 
-builder.Services.AddScoped<ITipoUsuarioRepository, TipoUsuarioRepository>();
-builder.Services.AddScoped<TipoUsuarioService>();
+// Cidade 
+builder.Services.AddScoped<ICidadeRepository, CidadeRepository>();
+builder.Services.AddScoped<CidadeService>();
+
+// Endereço
+builder.Services.AddScoped<IEnderecoRepository, EnderecoRepository>();
+builder.Services.AddScoped<EnderecoService>();
+
+// Localização 
+builder.Services.AddScoped<ILocalizacaoRepository, LocalizacaoRepository>();
+builder.Services.AddScoped<LocalizacaoService>();
+
+// Status patrimônio 
+builder.Services.AddScoped<IStatusPatrimonioRepository, StatusPatrimonioRepository>();
+builder.Services.AddScoped<StatusPatrimonioService>();
+
+// Status transferência 
+builder.Services.AddScoped<IStatusTransferenciaRepository, StatusTransferenciaRepository>();
+builder.Services.AddScoped<StatusTransferenciaService>();
+
+// Tipo alteração 
+builder.Services.AddScoped<ITipoAlteracaoRepository, TipoAlteracaoRepository>();
+builder.Services.AddScoped<TipoAlteracaoService>();
 
 // Tipo patrimônio 
 builder.Services.AddScoped<ITipoPatrimonioRepository, TipoPatrimonioRepository>();
 builder.Services.AddScoped<TipoPatrimonioService>();
 
-// Tipo alteração 
-builder.Services.AddScoped<ITipoAlteracaoRepository, TipoAlteracaoRepository>();
-builder.Services.AddScoped<TipoAlteracaoService>();
+// Tipo usuário 
+builder.Services.AddScoped<ITipoUsuarioRepository, TipoUsuarioRepository>();
+builder.Services.AddScoped<TipoUsuarioService>();
+
+// Usuário 
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<UsuarioService>();
 
 var app = builder.Build();
 

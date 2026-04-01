@@ -46,46 +46,46 @@ namespace GestaoPatrimonios.Applications.Services
             return statusDto;
         }
 
-        public void Adicionar(CriarTipoAlteracaoDto dto)
+        public void Adicionar(CriarStatusPatrimonioDto dto)
         {
-            Validar.ValidarNome(dto.NomeTipo);
+            Validar.ValidarNome(dto.NomeStatus);
 
-            TipoAlteracao? tipoExistente = _repository.BuscarPorNome(dto.NomeTipo);
+            StatusPatrimonio? statusExistente = _repository.BuscarPorNome(dto.NomeStatus);
 
-            if (tipoExistente != null)
+            if (statusExistente != null)
             {
-                throw new DomainException("Já existe um tipo de alteração cadastrado com esse nome.");
+                throw new DomainException("Já existe um status patrimônio cadastrado com esse nome.");
             }
 
-            TipoAlteracao tipo = new TipoAlteracao
+            StatusPatrimonio status = new StatusPatrimonio
             {
-                NomeTipo = dto.NomeTipo
+                NomeStatus = dto.NomeStatus
             };
 
-            _repository.Adicionar(tipo);
+            _repository.Adicionar(status);
         }
 
-        public void Atualizar(Guid tipoId, CriarTipoAlteracaoDto dto)
+        public void Atualizar(Guid statusId, CriarStatusPatrimonioDto dto)
         {
-            Validar.ValidarNome(dto.NomeTipo);
+            Validar.ValidarNome(dto.NomeStatus);
 
-            TipoAlteracao? tipoBanco = _repository.BuscarPorId(tipoId);
+            StatusPatrimonio? statusBanco = _repository.BuscarPorId(statusId);
 
-            if (tipoBanco == null)
+            if (statusBanco == null)
             {
-                throw new DomainException("Tipo de alteração não encontrado.");
+                throw new DomainException("Tipo de status patrimônio não encontrado.");
             }
 
-            TipoAlteracao? tipoExistente = _repository.BuscarPorNome(dto.NomeTipo);
+            StatusPatrimonio? statusExistente = _repository.BuscarPorNome(dto.NomeStatus);
 
-            if (tipoExistente != null)
+            if (statusExistente != null)
             {
-                throw new DomainException("Já existe um tipo alteração cadastrado com esse nome.");
+                throw new DomainException("Já existe um status patrimônio cadastrado com esse nome.");
             }
 
-            tipoBanco.NomeTipo = dto.NomeTipo;
+            statusBanco.NomeStatus = dto.NomeStatus;
 
-            _repository.Atualizar(tipoBanco);
+            _repository.Atualizar(statusBanco);
         }
     }
 }
