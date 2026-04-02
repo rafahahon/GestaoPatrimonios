@@ -45,6 +45,7 @@ public partial class GestaoPatrimoniosContext : DbContext
     public virtual DbSet<TipoUsuario> TipoUsuario { get; set; }
 
     public virtual DbSet<Usuario> Usuario { get; set; }
+    public object Patrimonios { get; internal set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
