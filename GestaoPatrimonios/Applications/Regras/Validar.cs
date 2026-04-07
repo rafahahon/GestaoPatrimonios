@@ -51,5 +51,13 @@ namespace GestaoPatrimonios.Applications.Regras
                 throw new DomainException("E-mail é obrigatório.");
             }
         }
+
+        public static void ValidarSenha(string senha)
+        {
+            if(string.IsNullOrWhiteSpace(senha))
+            {
+                throw new DomainException("Senha é obrigatória.");
+            }
+        }
     }
 }
