@@ -325,3 +325,10 @@ GO
 -- Adicionando Primeiro Acesso na tabela Usuário
 ALTER TABLE Usuario
 ADD PrimeiroAcesso BIT NOT NULL DEFAULT 1;
+
+-- Não vamos precisar do tipo patrimonio
+-- Comando para apagar a dependência 
+ALTER TABLE Patrimonio DROP CONSTRAINT FK_Patrimonio_TipoPatrimonio;
+
+-- Apagando a tabela
+DROP TABLE TipoPatrimonio;

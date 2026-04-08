@@ -25,7 +25,6 @@ namespace GestaoPatrimonios.Applications.Services
                 Denominacao = patrimonio.Denominacao,
                 NumeroPatrimonio = patrimonio.NumeroPatrimonio,
                 LocalizacaoID = patrimonio.LocalizacaoID,
-                TipoPatrimonioID = patrimonio.TipoPatrimonioID,
                 StatusPatrimonioID = patrimonio.StatusPatrimonioID
             }).ToList();
 
@@ -47,7 +46,6 @@ namespace GestaoPatrimonios.Applications.Services
                 Denominacao = patrimonio.Denominacao,
                 NumeroPatrimonio = patrimonio.NumeroPatrimonio,
                 LocalizacaoID = patrimonio.LocalizacaoID,
-                TipoPatrimonioID = patrimonio.TipoPatrimonioID,
                 StatusPatrimonioID = patrimonio.StatusPatrimonioID
             };
         }
@@ -61,11 +59,6 @@ namespace GestaoPatrimonios.Applications.Services
                 throw new DomainException("Localização não encontrada.");
             }
 
-            if (!_repository.TipoPatrimonioExiste(dto.TipoPatrimonioID))
-            {
-                throw new DomainException("Tipo patrimônio não encontrado.");
-            }
-
             if (!_repository.StatusPatrimonioExiste(dto.StatusPatrimonioID))
             {
                 throw new DomainException("Status patrimônio não encontrado.");
@@ -77,7 +70,6 @@ namespace GestaoPatrimonios.Applications.Services
                 Denominacao = dto.Denominacao,
                 NumeroPatrimonio = dto.NumeroPatrimonio,
                 LocalizacaoID = dto.LocalizacaoID,
-                TipoPatrimonioID = dto.TipoPatrimonioID,
                 StatusPatrimonioID = dto.StatusPatrimonioID
             };
             _repository.Adicionar(patrimonio);
@@ -99,11 +91,6 @@ namespace GestaoPatrimonios.Applications.Services
                 throw new DomainException("Localização não encontrada.");
             }
 
-            if (!_repository.TipoPatrimonioExiste(dto.TipoPatrimonioID))
-            {
-                throw new DomainException("Tipo patrimônio não encontrado.");
-            }
-
             if (!_repository.StatusPatrimonioExiste(dto.StatusPatrimonioID))
             {
                 throw new DomainException("Status patrimônio não encontrado.");
@@ -119,7 +106,6 @@ namespace GestaoPatrimonios.Applications.Services
             patrimonioBanco.Denominacao = dto.Denominacao;
             patrimonioBanco.NumeroPatrimonio = dto.NumeroPatrimonio;
             patrimonioBanco.LocalizacaoID = dto.LocalizacaoID;
-            patrimonioBanco.TipoPatrimonioID = dto.TipoPatrimonioID;
             patrimonioBanco.StatusPatrimonioID = dto.StatusPatrimonioID;
 
             _repository.Atualizar(patrimonioBanco);

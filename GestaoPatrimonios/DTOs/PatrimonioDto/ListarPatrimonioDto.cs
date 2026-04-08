@@ -9,7 +9,6 @@
         public string Imagem { get; set; } = string.Empty;
 
         public Guid LocalizacaoID { get; set; }
-        public Guid TipoPatrimonioID { get; set; }
         public Guid StatusPatrimonioID { get; set; }
     }
 }

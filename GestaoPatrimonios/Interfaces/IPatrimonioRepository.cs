@@ -11,7 +11,6 @@ namespace GestaoPatrimonios.Interfaces
         Patrimonio BuscarPorNumeroPatrimonio(string numeroPatrimonio, Guid? patrimonioId = null);
 
         bool LocalizacaoExiste(Guid localizacaoId);
-        bool TipoPatrimonioExiste(Guid tipoPatrimonioId);
         bool StatusPatrimonioExiste(Guid statusPatrimonioId);
 
         void Adicionar(Patrimonio patrimonio);
