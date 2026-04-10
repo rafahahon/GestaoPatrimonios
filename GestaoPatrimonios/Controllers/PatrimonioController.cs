@@ -1,8 +1,10 @@
 ﻿using GestaoPatrimonios.Applications.Services;
 using GestaoPatrimonios.DTOs.PatrimonioDto;
 using GestaoPatrimonios.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace GestaoPatrimonios.Controllers
 {
@@ -38,12 +40,23 @@ namespace GestaoPatrimonios.Controllers
             }
         }
 
-        [HttpPost]
-        public ActionResult Adicionar(CriarPatrimonioDto dto)
+        [Authorize(Roles = "Coordenador")]
+        [HttpPost("importar-csv")]
+        public ActionResult Adicionar(IFormFile arquivoCsv)
         {
             try
             {
-                _service.Adicionar(dto);
+                string usuarioIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (string.IsNullOrWhiteSpace(usuarioIdClaim))
+                {
+                    return Unauthorized("Usuário não autenticado.");
+                }
+
+                Guid usuarioId = Guid.Parse(usuarioIdClaim);
+
+                _service.Adicionar(arquivoCsv, usuarioId);
+
                 return Created();
             }
             catch (DomainException ex)
@@ -52,12 +65,13 @@ namespace GestaoPatrimonios.Controllers
             }
         }
 
-        [HttpPut("{id}")]
-        public ActionResult Atualizar(Guid id, CriarPatrimonioDto dto)
+        [Authorize(Roles = "Coordenador")]
+        [HttpPatch("{id}/status")]
+        public ActionResult AtualizarStatus(Guid id, AtualizarStatusPatrimonioDto dto)
         {
             try
             {
-                _service.Atualizar(id, dto);
+                _service.AtualizarStatus(id, dto);
                 return NoContent();
             }
             catch (DomainException ex)

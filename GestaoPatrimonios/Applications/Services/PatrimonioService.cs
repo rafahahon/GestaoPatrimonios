@@ -1,8 +1,12 @@
-﻿using GestaoPatrimonios.Applications.Regras;
+﻿using CsvHelper;
+using CsvHelper.Configuration;
+using GestaoPatrimonios.Applications.Mapeamentos;
+using GestaoPatrimonios.Applications.Regras;
 using GestaoPatrimonios.Domains;
 using GestaoPatrimonios.DTOs.PatrimonioDto;
 using GestaoPatrimonios.Exceptions;
 using GestaoPatrimonios.Interfaces;
+using System.Globalization;
 
 namespace GestaoPatrimonios.Applications.Services
 {
@@ -24,6 +28,8 @@ namespace GestaoPatrimonios.Applications.Services
                 PatrimonioID = patrimonio.PatrimonioID,
                 Denominacao = patrimonio.Denominacao,
                 NumeroPatrimonio = patrimonio.NumeroPatrimonio,
+                Valor = patrimonio.Valor,
+                Imagem = patrimonio.Imagem,
                 LocalizacaoID = patrimonio.LocalizacaoID,
                 StatusPatrimonioID = patrimonio.StatusPatrimonioID
             }).ToList();
@@ -37,95 +43,190 @@ namespace GestaoPatrimonios.Applications.Services
 
             if (patrimonio == null)
             {
-                throw new DomainException("Patrimônio não encontrado.");
+                throw new DomainException("Patrimônio não encontrado");
             }
 
-            return new ListarPatrimonioDto
+            ListarPatrimonioDto patrimonioDto = new ListarPatrimonioDto
             {
                 PatrimonioID = patrimonio.PatrimonioID,
                 Denominacao = patrimonio.Denominacao,
                 NumeroPatrimonio = patrimonio.NumeroPatrimonio,
+                Valor = patrimonio.Valor,
+                Imagem = patrimonio.Imagem,
                 LocalizacaoID = patrimonio.LocalizacaoID,
                 StatusPatrimonioID = patrimonio.StatusPatrimonioID
             };
+
+            return patrimonioDto;
         }
 
-        public void Adicionar(CriarPatrimonioDto dto)
+        public void Adicionar(IFormFile arquivoCsv, Guid usuarioId)
         {
-            Validar.ValidarNome(dto.Denominacao);
-
-            if (!_repository.LocalizacaoExiste(dto.LocalizacaoID))
+            if (arquivoCsv == null || arquivoCsv.Length == 0)
             {
-                throw new DomainException("Localização não encontrada.");
+                throw new DomainException("Arquivo CSV é obrigatório.");
             }
 
-            if (!_repository.StatusPatrimonioExiste(dto.StatusPatrimonioID))
+            Localizacao localizacaoSemLocal = _repository.BuscarLocalizacaoPorNome("Sem local");
+
+            if (localizacaoSemLocal == null)
             {
-                throw new DomainException("Status patrimônio não encontrado.");
+                throw new DomainException("Localização 'Sem local' não cadastrada.");
             }
 
-            Patrimonio patrimonio = new Patrimonio
+            StatusPatrimonio statusAtivo = _repository.BuscarStatusPatrimonioPorNome("Ativo");
+
+            if (statusAtivo == null)
             {
-                PatrimonioID = Guid.NewGuid(),
-                Denominacao = dto.Denominacao,
-                NumeroPatrimonio = dto.NumeroPatrimonio,
-                LocalizacaoID = dto.LocalizacaoID,
-                StatusPatrimonioID = dto.StatusPatrimonioID
-            };
-            _repository.Adicionar(patrimonio);
+                throw new DomainException("Status 'Ativo' não cadastrado.");
+            }
+
+            TipoAlteracao tipoAlteracao = _repository.BuscarTipoAlteracaoPorNome("Atualização de dados");
+
+            if (tipoAlteracao == null)
+            {
+                throw new DomainException("Tipo de alteração 'Atualização de dados' não cadastrado.");
+            }
+
+            List<ImportarPatrimonioCsvDto> registros;
+
+            // Abre o arquivo enviado (IFormFile)
+            using (var stream = arquivoCsv.OpenReadStream())
+            // Lê o arquivo como texto
+            using (var reader = new StreamReader(stream))
+
+            // Cria leitor de CSV com configurações personalizadas
+            // CultureInfo define como números, datas e textos são interpretados
+            // InvariantCulture -> padrão universal
+            using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                // Define que o separador é ponto e vírgula
+                Delimiter = ";",
+
+                // Ignora erros caso o cabeçalho não bata 100%
+                // Não trava a aplicação por conta de formatação, vamos tratar os erros depois.
+                HeaderValidated = null,
+
+                // Ignora o erro se faltar algum campo
+                MissingFieldFound = null,
+
+                // Ignora dados "quebrados" no CSV
+                BadDataFound = null, // EX. abriu aspas e não fechou
+
+                // Remove espaços extras automaticamente
+                TrimOptions = TrimOptions.Trim
+            }))
+            {
+                // Registra o mapa que criamos (Tradução CSV -> DTO)
+                csv.Context.RegisterClassMap<ImportarPatrimonioCsvMap>();
+
+                // Pega todas as linhas do CSV e converte para uma lista de DTO
+                registros = csv.GetRecords<ImportarPatrimonioCsvDto>().ToList();
+            }
+
+            var erros = new List<string>();
+
+            foreach (var item in registros)
+            {
+                // se não tem número de patrimônio, ignora o registro
+                if (string.IsNullOrWhiteSpace(item.NumeroPatrimonio))
+                {
+                    // ignora e vai pro próximo
+                    continue;
+                }
+
+                // Remove espaços extras do número
+                string numeroPatrimonio = item.NumeroPatrimonio.Trim();
+
+                if (string.IsNullOrWhiteSpace(item.Denominacao))
+                {
+                    erros.Add($"Patrimônio {numeroPatrimonio} sem denominação.");
+                    continue; // não cadastra, mas segue no loop
+                }
+
+                string denominacao = item.Denominacao.Trim();
+
+                DateTime? dataIncorporacao = null;
+
+                // usa o formato brasileiro só pra ler
+                // Depois pega o DateTime e formata
+                if (!string.IsNullOrWhiteSpace(item.DataIncorporacao))
+                {
+                    if (DateTime.TryParse(item.DataIncorporacao, new CultureInfo("pt-BR"), DateTimeStyles.None, out DateTime dataConvertida))
+                    {
+                        dataIncorporacao = dataConvertida;
+                    }
+                }
+
+                decimal? valorAquisicao = null;
+
+                if (!string.IsNullOrWhiteSpace(item.ValorAquisicao))
+                {
+                    // Remove separador de milhar e ajusta decimal
+                    string valorTexto = item.ValorAquisicao.Replace(".", "").Replace(",", ".");
+
+                    // TryParse - converte string -> decimal
+                    // NumberStyles.Any -> define quais formatos de números são permitidos - any aceita qualquer número, mesmo com sinal, com espaço, etc.
+                    // out decimal valorConvertido -> se der certo: cria a variavel com o valor já convertido
+
+                    if (decimal.TryParse(valorTexto, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal valorConvertido))
+                    {
+                        valorAquisicao = valorConvertido;
+                    }
+
+                    Validar.ValidarNumeroPatrimonio(numeroPatrimonio);
+                    Validar.ValidarNome(denominacao);
+
+                    bool patrimonioExistente = _repository.BuscarPorNumeroPatrimonio(numeroPatrimonio);
+
+                    if (patrimonioExistente == true)
+                    {
+                        continue;
+                    }
+
+                    Patrimonio patrimonio = new Patrimonio
+                    {
+                        Denominacao = denominacao,
+                        NumeroPatrimonio = numeroPatrimonio,
+                        Valor = valorAquisicao,
+                        Imagem = null,
+                        LocalizacaoID = localizacaoSemLocal.LocalizacaoID,
+                        StatusPatrimonioID = statusAtivo.StatusPatrimonioID
+                    };
+
+                    _repository.Adicionar(patrimonio);
+
+                    LogPatrimonio log = new LogPatrimonio
+                    {
+                        DataTransferencia = dataIncorporacao ?? DateTime.Now,
+                        TipoAlteracaoID = tipoAlteracao.TipoAlteracaoID,
+                        StatusPatrimonioID = patrimonio.StatusPatrimonioID,
+                        PatrimonioID = patrimonio.PatrimonioID,
+                        UsuarioID = usuarioId,
+                        LocalizacaoID = patrimonio.LocalizacaoID
+                    };
+
+                    _repository.AdicionarLog(log);
+                }
+            }
         }
 
-        public void Atualizar(Guid id, CriarPatrimonioDto dto)
+        public void AtualizarStatus(Guid patrimonioId, AtualizarStatusPatrimonioDto dto)
         {
-            Validar.ValidarNome(dto.Denominacao);
-
-            Patrimonio patrimonioBanco = _repository.BuscarPorId(id);
+            Patrimonio patrimonioBanco = _repository.BuscarPorId(patrimonioId);
 
             if (patrimonioBanco == null)
             {
                 throw new DomainException("Patrimônio não encontrado.");
             }
 
-            if (!_repository.LocalizacaoExiste(dto.LocalizacaoID))
-            {
-                throw new DomainException("Localização não encontrada.");
-            }
-
             if (!_repository.StatusPatrimonioExiste(dto.StatusPatrimonioID))
             {
-                throw new DomainException("Status patrimônio não encontrado.");
+                throw new DomainException("Status de patrimônio informado não existe.");
             }
 
-            Patrimonio patrimonioExistente = _repository.BuscarPorNumeroPatrimonio(dto.NumeroPatrimonio);
-
-            if (patrimonioExistente != null)
-            {
-                throw new DomainException("Já existe um patrimônio com esses dados.");
-            }
-
-            patrimonioBanco.Denominacao = dto.Denominacao;
-            patrimonioBanco.NumeroPatrimonio = dto.NumeroPatrimonio;
-            patrimonioBanco.LocalizacaoID = dto.LocalizacaoID;
             patrimonioBanco.StatusPatrimonioID = dto.StatusPatrimonioID;
 
-            _repository.Atualizar(patrimonioBanco);
-        }
-
-        public void AtualizarStatus(Guid id, Guid statusPatrimonioId)
-        {
-            Patrimonio patrimonioBanco = _repository.BuscarPorId(id);
-
-            if (patrimonioBanco == null)
-            {
-                throw new DomainException("Patrimônio não encontrado.");
-            }
-
-            if (!_repository.StatusPatrimonioExiste(statusPatrimonioId))
-            {
-                throw new DomainException("Status patrimônio não encontrado.");
-            }
-
-            patrimonioBanco.StatusPatrimonioID = statusPatrimonioId;
             _repository.AtualizarStatus(patrimonioBanco);
         }
     }

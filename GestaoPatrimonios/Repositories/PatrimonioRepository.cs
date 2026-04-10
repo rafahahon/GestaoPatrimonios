@@ -23,16 +23,9 @@ namespace GestaoPatrimonios.Repositories
             return _context.Patrimonio.Find(patrimonioId);
         }
 
-        public Patrimonio BuscarPorNumeroPatrimonio(string numeroPatrimonio, Guid? patrimonioId = null)
+        public bool BuscarPorNumeroPatrimonio(string numeroPatrimonio)
         {
-            var consulta = _context.Patrimonio.AsQueryable();
-
-            if (patrimonioId.HasValue)
-            {
-                consulta = consulta.Where(p => p.PatrimonioID != patrimonioId.Value);
-            }
-
-            return consulta.FirstOrDefault(p => p.NumeroPatrimonio.ToLower() == numeroPatrimonio.ToLower());
+            return _context.Patrimonio.Any(patrimonio => patrimonio.NumeroPatrimonio == numeroPatrimonio);
         }
 
         public bool LocalizacaoExiste(Guid localizacaoId)
@@ -45,19 +38,24 @@ namespace GestaoPatrimonios.Repositories
             return _context.StatusPatrimonio.Any(status => status.StatusPatrimonioID == statusPatrimonioId);
         }
 
+        public Localizacao BuscarLocalizacaoPorNome(string nomeLocalizacao)
+        {
+            return _context.Localizacao.FirstOrDefault(localizacao => localizacao.NomeLocal.ToLower() == nomeLocalizacao.ToLower());
+        }
+
+        public StatusPatrimonio BuscarStatusPatrimonioPorNome(string nomeStatus)
+        {
+            return _context.StatusPatrimonio.FirstOrDefault(status => status.NomeStatus.ToLower() == nomeStatus.ToLower());
+        }
+
+        public TipoAlteracao BuscarTipoAlteracaoPorNome(string nomeTipo)
+        {
+            return _context.TipoAlteracao.FirstOrDefault(tipo => tipo.NomeTipo.ToLower() == nomeTipo.ToLower());
+        }
+
         public void Adicionar(Patrimonio patrimonio)
         {
             _context.Patrimonio.Add(patrimonio);
-            _context.SaveChanges();
-        }
-
-        public void Atualizar(Patrimonio patrimonio)
-        {
-            if (patrimonio == null)
-            {
-                return;
-            }
-            _context.Patrimonio.Update(patrimonio);
             _context.SaveChanges();
         }
 
@@ -67,7 +65,22 @@ namespace GestaoPatrimonios.Repositories
             {
                 return;
             }
-            _context.Patrimonio.Update(patrimonio);
+
+            Patrimonio patrimonioBanco = _context.Patrimonio.Find(patrimonio.PatrimonioID);
+
+            if (patrimonioBanco == null)
+            {
+                return;
+            }
+
+            patrimonioBanco.StatusPatrimonioID = patrimonio.StatusPatrimonioID;
+
+            _context.SaveChanges();
+        }
+
+        public void AdicionarLog(LogPatrimonio logPatrimonio)
+        {
+            _context.LogPatrimonio.Add(logPatrimonio);
             _context.SaveChanges();
         }
     }

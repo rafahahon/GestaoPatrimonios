@@ -332,3 +332,13 @@ ALTER TABLE Patrimonio DROP CONSTRAINT FK_Patrimonio_TipoPatrimonio;
 
 -- Apagando a tabela
 DROP TABLE TipoPatrimonio;
+
+-- Criação de um local sem área
+INSERT INTO Area (AreaID, NomeArea)
+VALUES (NEWID(), 'Sem área')
+
+SELECT * FROM Area
+WHERE NomeArea = 'Sem área'
+
+INSERT INTO Localizacao (LocalizacaoID, NomeLocal, LocalSAP, DescricaoSAP, AreaID)
+VALUES (NEWID(), 'Sem local', NULL, NULL, 'FA663277-6FC1-4544-A5F9-919851D49634');
